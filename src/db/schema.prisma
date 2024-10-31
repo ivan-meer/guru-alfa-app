@@ -1,0 +1,115 @@
+// Database schema for Phuket Guru
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Main geographical direction
+model Direction {
+  id          String     @id
+  name        String
+  slug        String     @unique
+  description String     @db.Text
+  image       String
+  activities  Int
+  rating      Float
+  distance    String
+  duration    String
+  locations   Location[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([slug])
+}
+
+// Location within a direction
+model Location {
+  id              String    @id @default(cuid())
+  directionId     String
+  title           String
+  slug            String    @unique
+  thumbnail       String
+  horizontalCover String
+  description     String    @db.Text
+  direction       Direction @relation(fields: [directionId], references: [id])
+  points          Point[]
+  categories      Category[]
+  weather         Weather[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([directionId])
+}
+
+// Point of interest
+model Point {
+  id          String    @id @default(cuid())
+  locationId  String
+  title       String
+  category    String
+  image       String?
+  description String    @db.Text
+  latitude    Float?
+  longitude   Float?
+  location    Location  @relation(fields: [locationId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([locationId])
+  @@index([category])
+}
+
+// Category metadata
+model Category {
+  id          String     @id
+  name        String
+  description String
+  icon        String
+  locations   Location[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([name])
+}
+
+// Weather and sea conditions
+model Weather {
+  id           String   @id @default(cuid())
+  locationId   String
+  location     Location @relation(fields: [locationId], references: [id])
+  temperature  Float
+  condition    String
+  humidity     Float
+  waveHeight   Float
+  waterTemp    Float
+  seaStatus    String
+  tideStatus   String
+  tideHeight   Float
+  moonPhase    String
+  moonIllum    Float
+  warning      String?
+  timestamp    DateTime @default(now())
+
+  @@index([locationId])
+  @@index([timestamp])
+}
+
+// User data
+model User {
+  id         String     @id @default(cuid())
+  telegramId Int?       @unique
+  name       String?
+  language   String     @default("ru")
+  theme      String     @default("light")
+  favorites  Location[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([telegramId])
+}
